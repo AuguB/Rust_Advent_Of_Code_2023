@@ -14,3 +14,8 @@ For each line in a file, we are to take the first and last numerical characters 
 For this part we are to also parse written-out digits and take them into the mix. My approach is to first use Regex to replace all the written-out digits with their numerical counterparts. Then apply the same procedure as above. It fails, but I think I have an idea why.
 
 Okay it turns out, as I could have remembered from my formal reasoning courses at uni, that regex does not match overlapping patterns, i.e. if you have the word `abcd`, and the pattern `abc|bcd`, it will only match `abc`. I originaly wrote code without regex, which just replaced strings one-by-one, but that didn't work either. It took me a while to understand that `eightwo`, for example, had to be converted to `82`, and not to `8wo`. Replacing matches one-by-one with the digit, padded by the leading and trailing characters of the written-out digit solved it for me. 
+
+---
+
+### Day 2
+Just read the code or 
