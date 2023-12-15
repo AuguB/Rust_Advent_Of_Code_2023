@@ -10,7 +10,6 @@ mkdir "day$day_number"
 # Create the input.txt, instructions.txt, and mod.rs files
 touch "day$day_number/input.txt"
 touch "day$day_number/example_input.txt"
-touch "day$day_number/instructions.txt"
 
 # Add the new day to the lib.rs file
 echo "pub mod day$day_number;" >> "lib.rs"
