@@ -35,7 +35,7 @@ pub fn run1(file: &File) -> Result<String, Box<dyn std::error::Error>> {
     Ok(result.to_string())
 }
 
-pub fn run2(file: &File) -> Result<String, Box<dyn std::error::Error>> {
+pub fn run2(_file: &File) -> Result<String, Box<dyn std::error::Error>> {
     Ok(number_of_possible_held_down_times(46828479., 347152214061471.).to_string())
 }
 

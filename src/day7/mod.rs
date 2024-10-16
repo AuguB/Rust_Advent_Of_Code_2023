@@ -2,7 +2,6 @@ use lazy_static::lazy_static;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
-use std::path::MAIN_SEPARATOR;
 use std::sync::Mutex;
 
 lazy_static! {
@@ -34,21 +33,21 @@ lazy_static! {
 #[allow(dead_code)]
 #[allow(unused_imports)]
 pub fn run1(file: &File) -> Result<String, Box<dyn std::error::Error>> {
-    let _reader = io::BufReader::new(file);
+    let _reader: io::BufReader<&File> = io::BufReader::new(file);
     let mut hands: Vec<(u8, u32, i64)> = Vec::new();
     // Lock the mutex
-    let card_ordering = CARD_ORDERING_1.lock().unwrap();
+    let card_ordering: std::sync::MutexGuard<'_, Vec<char>> = CARD_ORDERING_1.lock().unwrap();
 
     for line in _reader.lines() {
-        let line = &line?;
-        let split = line.split_whitespace().collect::<Vec<&str>>();
-        let hand = split[0].to_string();
-        let hand_to_int = hand_as_int(&hand, &card_ordering);
-        let hand_type = hand_type(&hand);
-        let bid = split[1].parse::<i64>().unwrap();
+        let line: &String = &line?;
+        let split: Vec<&str> = line.split_whitespace().collect::<Vec<&str>>();
+        let hand: String = split[0].to_string();
+        let hand_to_int: u32 = hand_as_int(&hand, &card_ordering);
+        let hand_type: u8 = hand_type(&hand);
+        let bid: i64 = split[1].parse::<i64>().unwrap();
         hands.push((hand_type, hand_to_int, bid));
     }
-    hands.sort_by_key(|c| (c.0, c.1));
+    hands.sort_by_key(|c: &(u8, u32, i64)| (c.0, c.1));
     let total_score: i64 = hands
         .iter()
         .enumerate()
@@ -59,7 +58,7 @@ pub fn run1(file: &File) -> Result<String, Box<dyn std::error::Error>> {
 
 fn hand_type(hand: &str) -> u8 {
     // Lock the mutex
-    let hand_types = HAND_TYPES.lock().unwrap();
+    let hand_types: std::sync::MutexGuard<'_, HashMap<Vec<u8>, u8>> = HAND_TYPES.lock().unwrap();
     hand_types
         .get(&count_unique_characters(hand))
         .unwrap()
@@ -67,20 +66,20 @@ fn hand_type(hand: &str) -> u8 {
 }
 
 pub fn run2(file: &File) -> Result<String, Box<dyn std::error::Error>> {
-    let _reader = io::BufReader::new(file);
+    let _reader: io::BufReader<&File> = io::BufReader::new(file);
     let mut hands: Vec<(u8, u32, i64)> = Vec::new();
-    let card_ordering = CARD_ORDERING_2.lock().unwrap();
+    let card_ordering: std::sync::MutexGuard<'_, Vec<char>> = CARD_ORDERING_2.lock().unwrap();
 
     for line in _reader.lines() {
-        let line = &line?;
-        let split = line.split_whitespace().collect::<Vec<&str>>();
-        let hand = split[0].to_string();
-        let hand_to_int = hand_as_int(&hand, &card_ordering);
-        let hand_type = get_augmented_hand_type(&hand);
-        let bid = split[1].parse::<i64>().unwrap();
+        let line: &String = &line?;
+        let split: Vec<&str> = line.split_whitespace().collect::<Vec<&str>>();
+        let hand: String = split[0].to_string();
+        let hand_to_int: u32 = hand_as_int(&hand, &card_ordering);
+        let hand_type: u8 = get_augmented_hand_type(&hand);
+        let bid: i64 = split[1].parse::<i64>().unwrap();
         hands.push((hand_type, hand_to_int, bid));
     }
-    hands.sort_by_key(|c| (c.0, c.1));
+    hands.sort_by_key(|c: &(u8, u32, i64)| (c.0, c.1));
     let total_score: i64 = hands
         .iter()
         .enumerate()
@@ -90,7 +89,7 @@ pub fn run2(file: &File) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 fn hand_as_int(hand: &String, card_ordering: &Vec<char>) -> u32 {
-    let hand_to_hex = hand
+    let hand_to_hex: String = hand
         .chars()
         .map(|c| {
             format!(
@@ -105,24 +104,22 @@ fn hand_as_int(hand: &String, card_ordering: &Vec<char>) -> u32 {
 }
 
 fn get_augmented_hand_type(hand: &str) -> u8 {
-    let hand_type = hand_type(&hand);
-    let count_j = hand.chars().filter(|&c| c == 'J').count();
-    let mut augmented_hand_type = 0;
+    let hand_type: u8 = hand_type(&hand);
+    let count_j: usize = hand.chars().filter(|&c| c == 'J').count();
     match (count_j, hand_type) {
-        (0, _) => {
-            augmented_hand_type = hand_type;
+        (0, _) | (_, 6)=> {
+            return hand_type;
         }
         (1, 0) | (1, 5) | (4, 5) => {
-            augmented_hand_type = hand_type + 1;
+            return hand_type + 1;
         }
         (2, 2) => {
-            augmented_hand_type = hand_type + 3;
+            return hand_type + 3;
         }
         (_, _) => {
-            augmented_hand_type = hand_type + 2;
+            return hand_type + 2;
         }
     }
-    augmented_hand_type
 }
 
 fn count_unique_characters(s: &str) -> Vec<u8> {
@@ -175,7 +172,13 @@ mod tests {
             let result = get_augmented_hand_type(&hand);
             assert_eq!(result, expected_augmented_hand_type);
         }
+
+        // Assert this throws an error:
+        let result = get_augmented_hand_type("JJJJJ");
+        assert_eq!(result, 6);
+
     }
+
 
     #[test]
     fn test_hand_as_int_1() {
